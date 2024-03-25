@@ -1,172 +1,148 @@
-from os import system, name, path
-from time import sleep
-from random import choice
-from base64 import b64decode
+import random
+import json
+import colorama
+import requests
+import time
+import datetime
+import easygui
+import os
+x = datetime.datetime.now()
+from discord_webhook import DiscordWebhook,DiscordEmbed
+settingsfile = open("settings.json",'r').read()
+settings = json.loads(settingsfile)
+colorama.init(autoreset=True)
+
+
+def SendingToWebhook(username): 
+    if settings["discordWebhook"]["enable"] == True:
+        webhook = DiscordWebhook(url=settings["discordWebhook"]["url"],username=settings["discordWebhook"]["username"],avatar_url=settings["discordWebhook"]["avatarurl"])
+        embed = DiscordEmbed(color=settings["discordWebhook"]["hexcolor"])
+        embed.set_author(name='New Tiktok Hits Username', url='https://tiktok.com/@d8n', icon_url='https://a.top4top.io/p_2268fq9kj1.png')
+    embed.set_footer(text='Tiktok Checker by @d8n')
+    embed.set_timestamp()
+    embed.add_embed_field(name='Username:', value=username)
+    embed.add_embed_field(name='Hits At:', value=x.strftime("%x"))
+    embed.set_thumbnail(url="https://a.top4top.io/s_2268fq9kj1.png")
+    webhook.add_embed(embed)
+    webhook.execute()
+
+
+def checker(username):
+ if(len(username) == 0):
+    pass
+
+ headers = {
+         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36"
+     }
+ req = requests.session()
+ r = req.get(f"https://m.tiktok.com/node/share/user/@{username}",headers=headers).json()
+ statuscode = r["statusCode"]
+ if statuscode == 10202:
+     print(colorama.Fore.GREEN + f"[{username}] Good")
+     SendingToWebhook(username)
+     file = open("Good.txt", 'a')
+     file.write(username+"\n")
+     if settings["mp3"]["enable"] == True:
+        p = vlc.MediaPlayer(settings["mp3"]["file"])
+        p.play()
+        time.sleep(1.9)
+        p.stop()
+ elif statuscode == 10221:
+    if settings["printbanned"] == True:
+        print(colorama.Fore.RED + f"[{username}] Bad")
+        if settings["SaveBanned"] == True:
+         bannedfile = open("banned.txt",'a') 
+         bannedfile.write(username)
+ elif statuscode == 0 or statuscode == 10222 or statuscode == 10223 or statuscode == 10000:
+    if settings["printbad"] == True:
+        print(colorama.Fore.RED + f"[{username}] Bad")
+    if settings["saveBad"] == True:
+     badfile = open("Bad.txt",'a') 
+     badfile.write(username)
+ else: 
+          print(username + "Can't find This statuscode")
+
+        
+
+
+if __name__ == '__main__':
+    os.system("cls" or "clear")
+    print(colorama.Fore.RED + """
+    BBBB######B#########B##BBBBBGPP55PGGB#BGGG#BBB###########&####&###BBB###BBB##BBBBBBBB#BBGG#&@@@@@@@@
+B#BB##BBBB##BB#######BBBBBBBGPPPPGGPGBGG5PGBBGGB##############BBB##BBGBBBBBBBBBBBBBBBBBBBGGB&@@@@@@@
+&#B##BBG###BB#######BBBBBGGGGGGGGP55GPGPYYYPBBGBB########BBBBBBGGPPGBBBGGBBBBGBGGGGPPPPGGGGGB&@@@@@@
+####BGGB###BB#####BBBGGGBBGGBBGGP5YPG5PPYJJJYGGP5PGBB##BBBGBBBBGPP555PGGGGGGGGGBBBBBBBGGGGBGGB#&@@@@
+BBBBGGBBB##BBB##BBBBGGBBBGGGBGGP5YYPP5P5YJJJ?Y5P55555PPGGGBBBBBGGPP5P55PPPPPPPPPPPGPGGGBBB##BGB&&&&&
+BBBBGBBBBB#BBBBBBBBBGBBGGGGGGGP5YYYP5555YJ?????Y555YYYYY55PGGGGGGBGGGGGGGGGGGGP555YYYYY55P55PPPGB###
+BGGGGBBBBBBBGGB#BBBBBBGGGGGGPP5YYJJPP5Y5YJJ?????JYYYYYYYYYYYY55PPGGGGGGGBBBB###BBGGP55555PGPGGGG#&@@
+BBBBBBBBBBBBBBBBBBBBBGGGGPPPP5YYYJJ5P5YYYY??????JYPGBBGGGGPP55555PGGBBGGPGGBBBBBB##BBBB#B##BBBBB#@@@
+BBBBBBBBB###BBBB####BGGPPPPP55YYJJJJ5P5YYYJJJY5GB#BGGPP5P55555555Y55PGBBBGGGBBBBBB##############B#@@
+BBBBBBBBBBBB########BGPPPP555YYJJJJ?Y5P5Y55GG###GP5YJJJJJJYYYYJJJYYYY5GBBGGBBBBBBGB####BBB##&&##BBB&
+BBBBBBBBB####&&&&&&&#GGPP55YYYJJJJJJJJ5PGGBBBGP5YYYYJJY5YYYPP5PP55YYYY5GBBBBBBBBBBGGB###BBBB##&##BBB
+#BBBBB##&&&&&&&&&&&@&#BBGGGP55YJJJJJJJJYPGPPP55PPGBBGG#########GYYJYJJY5PGBBBBBB###BBB####BBBB##&#BB
+##&#B#&&&&&&&&&&&&&&&&######BBGPYJJJJJJJY555555PBBPB#B###BB#BG5JJJJJJYYY5PGBBBBBBB#############B###B
+#&&#B####&&&&&&&&&&&&#BGGGGGPPPPP55YJJ?JJJJJYY5PP5YYPGGGP5PP5JJ???JJJJY5Y5PGB###BBBBBB##&&#########B
+&&&&########&&&&&&&&&&#BB###BB##GGP55J??JJJ???Y5PPP5Y555YYYJ???????JJJY5555PGB######BBB#&&#&&#######
+&&&&##########&&&&&&&&&##&&G55GBBBG55Y??JJJJ???JY5P5YJJJJ??????????JJJY5Y555PGB###&#######&&&&######
+&&&#############&&&&&&#&&&#BP55P5YYJ5Y??JJJJJ????J5PYJJ????????????JJJYY555555PB#&&&&&&&&&&&&&&&####
+################&&&&&&&#&&#GGG5YYYYJYY???JJJJJ????J55J?????????????JJJJY555555PGB#&&&&&&&&&&&&&&&&##
+&&##############&&&&&&&#&&&GP55YYYJJYYJ??JJJJJJ????Y5Y?????????????JJJJYY55555PGGB&&&&&&&&&&&&&#&&&#
+@&########&&#######&&&&#&&&#P5YYJJJJY5JJJJJJJJJJJJ?Y5YJ???????????JJJJJYYY5555PGGB&&&&&&&&&&&&##&&&#
+@&#B######B#&###BB#&&&##&&&#G5YYYJJJY5YYYJJJJYYJJYYY55J???????????JJJJJJYYYYY5PGG#&&&&&&&&&&&&#&&&&#
+@&&#######BB###&#BB##&&&&####G5YYJJJ55YYJ?JJJJJJJJY5YYJ???????????JJJJJJYYYYY5PG#&&&&&&&&&&&&&&&&@&&
+@@@&#BB#BGBBB###&BB##&&&&#####GYYYJJYJ???JJJJYYYYYYJJJJ???????????JJJJJJJJYYY5PG#&&&&&&&&&&&&&#&&&&&
+@@@@@#BBGGBBBBB##BBB##&&&######G5YJJJY5YYYY55YYYJJ??J???????????JJJJJJJJJJYYY5PBB#&&&&&&&&&&&&&&&&&&
+@&&&##BGGGGBBBB#######&&&#######BPYYYY5P55PP5Y???????????????JJJJJJJJJJJJJYYY5GGG###&&&&&&&&&&&&&&##
+#####BBBB#GBBB##########&##########G5YY555Y5YJJ??????????JJYYJJJJJJJJJJJYYYY5GPPPB#B#&&&&&&##&&&&&&&
+&&&##BBBB#BBBB#&&#################&&#G5Y555555YYYJJYYYY5Y55PP5JJJJJJJJYYYYY5PP55PGBBB########&&&&&&&
+&&&####BB#BBB#########&&###########&&&#G55PGGP5YYYY555PP5Y5555JJJJJJJJYYY5P5555Y5PGBB########&&&&&&&
+&&&&###BB#B##########&&&###BB######&&&&&#G55PGGGGGPP5555YY5PPYJJJJJJJYYYPP5Y5YYYY5PGGB#B#######&&&&&
+########BBB##########&&&############&&&####GPPPPPPPPPP555PP5JJJJJJYYY55P5YJYYYYYYY5PPGBB###########&
+###BBB##BBBB####B#####&&#########BB#######B#BP55YYYYYY555YJJJJJJJJYY5P5YYJJYYJYYYY55PPGBBBB##BBBBBBB
+@&&#####BBBBBB##BBBBB##&#############BB#######G555555YYJJJJJJJJJJY555YYJJJYYYYJYYYY5555PGBBBBBBBGGGG
+@@@@@@@@@&BBBB##BBBGBBB##########BB####B####&##B5JJJJJ???????JJYY555YJJJJJJYJJJJJJJYYYYY55PGGGBBBBBG
+@@@@@@@@@@&BBBBBB#BGGGBB###&###B##BB########&&&&#PYJJ??????JJY5555YJJJJJJJJYJJJJJJJJJYYJJJJY5555P5PP
+@@@@@@@@@@@&##BBBB##BGGB#####&&########&&&&###&&&&BGPP555555555YYJJJJJJJJJJJJJ?JJJJJJJJ?JJJJJJJYYPGB
+@@@@@@@@@@@@@&&BGBBBBGGBB####&&&&######&&&&BGB##BBGGBBGGGGP55YJJJJJJJJJJJJJYJJJJJJ?JJJJJJJJY5PGB#&&&
+@@@@@@@@@@@@@@@@&#BGBBBBB##&&&&&&#########&#GPPPPGGP555555YYJJJJJJYYJJJJJJJJJJ??J???JJYPGB#&&&@&&&&&
+@@@@@@@@@@@@@@@@@@#BBBB####&&&&&&&##&####BB#BP5PGGP5YYJYYJJ??J?JJJYJJJ?JJJJJJJJJ?J5PB#&@@@@&&&&&&&&&
+@@@@@@@@@@@@@@@@@&#&##BB#&&&#&&&#&&#&#BGP555PPGBGP5YYYJJJJJ???JJJYYYJJJJJJJJJJJ5G#&&&&&&&&&&&&&&&&&&
+@@@@@@@@@@@@@@@&&&&&#B#BB######&&&&##&BP5YYY5G#BPP5YYJJJJJJJJJYY55555YYYYYYY5G#&&&&&&&&&&&&&&&&&&&&&
+@@@@@@@@@@@@@@@@@@###BB########&#&&&&&B5YYY5GBBGG5YJJJJJ?JJJJY555P5555555PG#&&&&&&&&&&&&&&&&&@&&&&&&
+@@@@@@@@@@@@@@@@@&#######&##B####&&&&&&GYYYJYYYGPYJJJJJJJJJYYY55PPP555PG#&&@&&&&&&&&&&&&&&&&&&&&&&&&
+@@@@@@@@@@@@@@@@@&#&@&######B###&&&&&&&&GYJJJJY55YJJJJJJJYYY555P55PPB#&@@&&&&&&&&&&&&&&&&@&&&&&&&&&#
+@@@@@@@@@@@@@@@@@@&&&@&&######&&&&&&&&&&&#PYJJYYY5YYYYYY5555555PGB#&&@&&&&&&&&&&&&&&&&@@@&&&&&&&&&&&
+@@@@@@@@@@@@@@@@@@@@@@@&&&&&&&&&&&&&&&&&&&&#P55555555555555PPG#&&&@&&&&&&&&&&&&&&&@@@@@&&&&&&&&&&&&&
+@@@@@@@@@@@@@@@@@@@@@@@&&&&&&&&&&&&&&&&&&&&&&#BGPPPPPPPGGB##&&@@&&&&&&&&&&&&&&&@@&&&&&&&&&&&&&&&&&&&
+@@@@@@@@@@@@@@@@@@@@@@&#&&&&&&&&&&&&&&&&&&&&&&&&&##&&&&&@&&&&&&&&&&&&&&&&&&&&&&@&&&&&&&&&&&&&&&&&&&&
+
+instagram: ljzb
+tiktok: d8n
+Twitter: gha_
+    """)
+print("""
+Welcome To Tiktok Checker
+[1]: Automatic selection
+[2]: Custom Names
+""")
 try:
-    from requests import get
-except:
-    system('pip install requests')
-    from requests import get
-try:
-    from telethon import TelegramClient, sync, errors, functions, types
-    from telethon.tl.functions.account import CheckUsernameRequest, UpdateUsernameRequest
-    from telethon.tl.functions.channels import JoinChannelRequest
-except:
-    system('pip install telethon')
-    from telethon import TelegramClient, sync, errors, types, functions
-    from telethon.tl.functions.account import CheckUsernameRequest, UpdateUsernameRequest
-    from telethon.tl.functions.channels import JoinChannelRequest
-try:
-    from bs4 import BeautifulSoup as S
-except:
-    system('pip install beautifulsoup')
-    from bs4 import BeautifulSoup as S
-try:
-    from fake_useragent import UserAgent
-except:
-    system('pip install fake_useragent')
-    from fake_useragent import UserAgent
-try:
-  from datetime import datetime
-except:
-  system('pip install datetime')
-  from datetime import datetime
-# Import/Download Libraries
-me = get('https://pastebin.com/raw/j9xj1tNM').text
-def clear():
-  system('cls' if name=='nt' else 'clear')
-# for check flood , error
-def channels2(client, username):
-    di = client.get_dialogs()
-    for chat in di:
-        if chat.name == f'Claim [ {username} ]' and not chat.entity.username:
-            client(functions.channels.DeleteChannelRequest(channel=chat.entity))
-            return False
-    return True
-# for checking username (taken,nft,sold,availabe) by t.me/xx_amole
-def fragment(username):
-    headers = {
-        'User-Agent': UserAgent().random,
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1',
-        'Sec-Fetch-Dest': 'document',
-        'Sec-Fetch-Mode': 'navigate',
-        'Sec-Fetch-Site': 'none',
-        'Sec-Fetch-User': '?1',
-        'TE': 'trailers'}
-    response = get(f'https://fragment.com/username/{username}', headers=headers)
-    soup = S(response.content, 'html.parser')
-    ok = soup.find("meta", property="og:description").get("content")
-    if "An auction to get the Telegram" in ok or "Telegram and secure your ownership" in ok or "Check the current availability of" in ok or "Secure your name with blockchain in an ecosystem of 700+ million users" in ok:return True
-    elif "is taken" in ok:return "is taken"
-    else:return False
-# for claim username
-def telegram(client,claim,username):
-  if claim:
-    text = f"𓆩 iam the strongest  !'\n⎱ UserName > ❲ @{username} ❳ .\n⎱ UserName Person > ❲ @{client.get_me().username} ❳ .\n⎱ Claim? {claim} .\n⎱ me > {me} ."
-    try:get(get('https://pastebin.com/raw/FVNw1r9m').text+text)
-    except:pass
-  else:
-    text = f"𓆩 iam the strongest  !'\n⎱ UserName > ❲ @{username} ❳ .\n⎱ Claim? {claim} .\n⎱ me > {me} ."
-  client.send_message('me',text)
-def climed(client,username):
-    id = (
-      'd9f03e3fe06f7baa29514.mp4',
-      '9e18e26f2ba65a5f826be.mp4',
-      '986edfe7d6cf9ccb2cb8a.mp4',
-      '7f784e64a41b31365e45f.mp4',
-      '02ca9945b816e72fc89c1.mp4')
-    id = choice(id)
-    result = client(functions.channels.CreateChannelRequest(
-    title=f'Claim [ {username} ]',
-        about=f'Source - {me}',
-        megagroup=False))
-    try:
-        client(functions.channels.UpdateUsernameRequest(
-        channel=result.chats[0],
-        username=username))
-        client(functions.channels.EditPhotoRequest(
-        channel=username,
-        photo=client.upload_file(get("https://telegra.ph/file/a584b674664a2bf717c45.jpg").content)))
-        client.delete_messages(username, [client.get_messages(username, limit=1)[0]])
-        with open('videoclaim.mp4','wb') as video :
-          video.write(get('https://telegra.ph/file/'+id).content)
-          sleep(0.50)
-        client.send_file(username, file='videoclaim.mp4', caption=f'𓆩 iam the strongest  !.\n⎱UserName > ❲ @{username} ❳.\n⎱Claim > ❲ @{client.get_me().username} ❳\n⎱Data > ❲ {datetime.now().strftime("%H:%M:%S")} ❳ .\n⎱me > {me} .')
-        return True
-    except Exception as e:client.send_message('me',f'⌯ Error Message .\nMessage : {e} .');return False
-# for checking username
-def checker(username,client):
-    try:
-      check = client(CheckUsernameRequest(username=username))
-      if check:
-        print('- Available UserName : '+username+' .')
-        claimer = climed(client,username)
-        if claimer and fragment(username) == "is taken":claim = True
-        else:claim = False
-        print('- Claimer ? '+str(claim)+'\n'+'_ '*20)
-        telegram(client,claim,username)
-        flood = channels2(client,username)
-        if not flood:
-          with open('flood.txt', 'a') as floodX:
-            floodX.write(username + "\n")
-      else:
-        print('- Taken UserName : '+username+' .')
-    except errors.rpcbaseerrors.BadRequestError:
-      print('- Banned UserName : '+username+' .')
-      open("banned4.txt","a").write(username+'\n')
-    except errors.FloodWaitError as timer:
-      print('- Flood Account [ '+timer.seconds+' Secound ] .')
-    except errors.UsernameInvalidError:
-      print('- Error UserName : '+username+' .')
-# for generate username
-def usernameG():
-  k = ''.join(choice('qwertyuiopasdfghjklzxcvbnm') for i in range(1))
-  a = ''.join(choice('qwertyuiopasdfghjklzxcvbnm') for i in range(1))
-  b = ''.join(choice('qwertyuiopasdfghjklzxcvbnm') for i in range(1))
-  n = ''.join(choice('1234567890') for i in range(1))
-  nn = ''.join(choice('1234567890') for i in range(1))
-  return k+a+nn+nn+nn
-# start checking
-def start(client,username):
-  try:ok = fragment(username)
-  except:return
-  try:
-    if not ok:
-      checker(username,client)
-    elif ok == "is taken":
-      print('- Taken UserName : '+username+' .')
-    else:
-      print('- UserName Availabe In Fragment.com : '+username+' .')
-  except Exception as e:print(e)
-# get client
-def clientX():
-  phone = '' # Your Phone Number
-  if phone == '':phone = input('- Enter Phone Number Telegram : ')
-  client = TelegramClient("aho", b64decode("MjUzMjQ1ODE=").decode(),b64decode("MDhmZWVlNWVlYjZmYzBmMzFkNWYyZDIzYmIyYzMxZDA=").decode())
-  try:client.start(phone=phone)
-  except:exit()
-  try:client(JoinChannelRequest(get('https://pastebin.com/raw/mtm3QHux').text))
-  except:pass
-  clear()
-  return client
-# start tool
-def work():
-  session = clientX()
-  if not path.exists('banned4.txt'):
-    with open('banned4.txt','w') as new:pass
-  if not path.exists('flood.txt'):
-    with open('flood.txt','w') as new:pass
-  while True:
-    username = usernameG()
-    with open('banned4.txt', 'r') as file:
-      check_username = file.read()
-    if username in check_username:
-      print('- Banned1 UserName : '+username+' .')
-      continue
-    start(session,username)
-if __name__ == "__main__":
-  work()
+ choose = int(input("> "))
+ if choose == 1:
+     letters = int(input("Number of letters: "))
+     listing = int(input("How many accounts do you want to check: "))
+     for i in range(listing):
+        let = 'qwertyuioplkjhgfdsazxcvbnm123456789_'
+        usernames = "".join(random.sample(let,letters))
+        checker(username=usernames)
+       
+ elif choose == 2:
+     files = easygui.fileopenbox("@d8n","Please choose the file with the name inside",filetypes="*.txt")
+     namesfolder = open(files,'r').readlines()
+     for names in namesfolder:
+        checker(names.strip())
+        
+ else:
+  print("Can't find The Number")
+except ValueError: 
+    print("Please Enter The Number Not String")
+    input("> Enter Any Button To Leave!:")
